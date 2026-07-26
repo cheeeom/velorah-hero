@@ -151,17 +151,17 @@ function AboutPage({ onNavigate }: { onNavigate: (id: PageId) => void }) {
           style={{ fontFamily: "'Instrument Serif', serif" }}>
           {about.title}
         </h1>
-        <p className="text-muted-foreground text-sm sm:text-base leading-relaxed whitespace-pre-line mb-10">
+        <p className="text-muted-foreground text-base sm:text-lg leading-relaxed whitespace-pre-line mb-12">
           {about.intro}
         </p>
-        <div className="space-y-6">
+        <div className="space-y-8">
           {about.achievements.map((item, i) => (
-            <div key={i} className="flex items-start gap-4 animate-fade-rise-delay"
+            <div key={i} className="flex items-start gap-5 animate-fade-rise-delay"
               style={{ animationDelay: `${0.1 + i * 0.1}s` }}>
-              <span className="shrink-0 inline-flex items-center px-3 py-1 text-xs rounded-full liquid-glass text-muted-foreground">
+              <span className="shrink-0 inline-flex items-center px-4 py-1.5 text-sm rounded-full liquid-glass text-muted-foreground">
                 {item.year}
               </span>
-              <p className="text-sm sm:text-base text-foreground/90 leading-relaxed">
+              <p className="text-base sm:text-lg text-foreground/90 leading-relaxed">
                 {item.text}
               </p>
             </div>
