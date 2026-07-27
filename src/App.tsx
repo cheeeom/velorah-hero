@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 import {
   brand,
@@ -9,10 +9,70 @@ import {
   articles,
   socialLinks,
   bgVideo,
+  quotes,
   type PageId,
 } from '@/content/site'
 
-/** ── Logo ── */
+/* ════════════════════════════════════════════════════
+ * Theme Context
+ * ════════════════════════════════════════════════════ */
+
+type Theme = 'dark' | 'light'
+
+function useTheme(): [Theme, () => void] {
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window === 'undefined') return 'dark'
+    return (localStorage.getItem('theme') as Theme) || 'dark'
+  })
+
+  useEffect(() => {
+    const root = document.documentElement
+    if (theme === 'light') {
+      root.classList.add('light')
+    } else {
+      root.classList.remove('light')
+    }
+    localStorage.setItem('theme', theme)
+  }, [theme])
+
+  const toggle = useCallback(() => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))
+  }, [])
+
+  return [theme, toggle]
+}
+
+/* ════════════════════════════════════════════════════
+ * Scroll Reveal Hook (for timeline)
+ * ════════════════════════════════════════════════════ */
+
+function useScrollReveal<T extends HTMLElement>() {
+  const ref = useRef<T>(null)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true)
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.15 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  return { ref, visible }
+}
+
+/* ════════════════════════════════════════════════════
+ * Logo
+ * ════════════════════════════════════════════════════ */
+
 function Logo() {
   return (
     <span
@@ -37,10 +97,40 @@ function Logo() {
   )
 }
 
-/** ── Navbar ── */
-function Navbar({ currentPage, onNavigate }: {
+/* ════════════════════════════════════════════════════
+ * Theme Toggle Button
+ * ════════════════════════════════════════════════════ */
+
+function ThemeToggle({ theme, onToggle }: { theme: Theme; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      className="cursor-pointer liquid-glass rounded-full w-10 h-10 flex items-center justify-center text-foreground hover:scale-110 transition-transform"
+      aria-label="切换主题"
+    >
+      {theme === 'dark' ? (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+        </svg>
+      ) : (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+      )}
+    </button>
+  )
+}
+
+/* ════════════════════════════════════════════════════
+ * Navbar
+ * ════════════════════════════════════════════════════ */
+
+function Navbar({ currentPage, onNavigate, theme, onToggleTheme }: {
   currentPage: PageId
   onNavigate: (id: PageId) => void
+  theme: Theme
+  onToggleTheme: () => void
 }) {
   return (
     <nav className="relative z-10 flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
@@ -69,12 +159,15 @@ function Navbar({ currentPage, onNavigate }: {
         ))}
       </div>
 
-      <button
-        onClick={() => onNavigate(currentPage === 'home' ? 'about' : 'articles')}
-        className="hidden md:inline-flex cursor-pointer liquid-glass rounded-full px-6 py-2.5 text-sm text-foreground hover:scale-[1.03] transition-transform"
-      >
-        {currentPage === 'home' ? hero.navCta : '开始探索'}
-      </button>
+      <div className="flex items-center gap-3">
+        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+        <button
+          onClick={() => onNavigate(currentPage === 'home' ? 'about' : 'articles')}
+          className="hidden md:inline-flex cursor-pointer liquid-glass rounded-full px-6 py-2.5 text-sm text-foreground hover:scale-[1.03] transition-transform"
+        >
+          {currentPage === 'home' ? hero.navCta : '开始探索'}
+        </button>
+      </div>
 
       <button className="md:hidden text-foreground cursor-pointer bg-transparent border-none">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
@@ -87,7 +180,10 @@ function Navbar({ currentPage, onNavigate }: {
   )
 }
 
-/** ── Heading parts renderer ── */
+/* ════════════════════════════════════════════════════
+ * Hero Heading
+ * ════════════════════════════════════════════════════ */
+
 function HeroHeading({ parts }: {
   parts: { text: string; highlight?: boolean }[]
 }) {
@@ -102,6 +198,10 @@ function HeroHeading({ parts }: {
   )
 }
 
+/* ════════════════════════════════════════════════════
+ * Page Shell
+ * ════════════════════════════════════════════════════ */
+
 function PageShell({ children }: { children: React.ReactNode }) {
   return (
     <section className="relative z-10 flex flex-col items-center justify-center text-center px-6 min-h-[calc(100dvh-64px)]">
@@ -110,7 +210,49 @@ function PageShell({ children }: { children: React.ReactNode }) {
   )
 }
 
-/** ── Home ── */
+/* ════════════════════════════════════════════════════
+ * Quote Carousel
+ * ════════════════════════════════════════════════════ */
+
+function QuoteCarousel() {
+  const [index, setIndex] = useState(0)
+  const [phase, setPhase] = useState<'enter' | 'exit'>('enter')
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setPhase('exit')
+      setTimeout(() => {
+        setIndex((prev) => (prev + 1) % quotes.length)
+        setPhase('enter')
+      }, 400)
+    }, 8000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const q = quotes[index]
+
+  return (
+    <div className="max-w-2xl mx-auto text-center px-4">
+      <div
+        key={index}
+        className={phase === 'enter' ? 'quote-enter' : 'quote-exit'}
+      >
+        <p
+          className="text-lg sm:text-xl md:text-2xl leading-relaxed text-foreground/80 italic"
+          style={{ fontFamily: "'Instrument Serif', serif" }}
+        >
+          "{q.text}"
+        </p>
+        <p className="text-sm text-muted-foreground mt-3">— {q.author}</p>
+      </div>
+    </div>
+  )
+}
+
+/* ════════════════════════════════════════════════════
+ * Home Page
+ * ════════════════════════════════════════════════════ */
+
 function HomePage({ onNavigate }: { onNavigate: (id: PageId) => void }) {
   return (
     <PageShell>
@@ -129,7 +271,13 @@ function HomePage({ onNavigate }: { onNavigate: (id: PageId) => void }) {
       >
         {hero.heroCta}
       </button>
-      <div className="animate-fade-rise-delay-2 flex items-center gap-6 mt-14">
+
+      {/* 名言轮播 */}
+      <div className="animate-fade-rise-delay-2 mt-16 mb-4">
+        <QuoteCarousel />
+      </div>
+
+      <div className="animate-fade-rise-delay-2 flex items-center gap-6 mt-10">
         {socialLinks.map((link) => (
           <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer"
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -142,32 +290,69 @@ function HomePage({ onNavigate }: { onNavigate: (id: PageId) => void }) {
   )
 }
 
-/** ── About ── */
+/* ════════════════════════════════════════════════════
+ * About Page — 交互式成就时间线
+ * ════════════════════════════════════════════════════ */
+
+function TimelineItem({ item, index }: {
+  item: { year: string; text: string; icon: string }
+  index: number
+}) {
+  const { ref, visible } = useScrollReveal<HTMLDivElement>()
+  const isLeft = index % 2 === 0
+
+  return (
+    <div
+      ref={ref}
+      className={cn('timeline-item relative flex items-center w-full', isLeft ? 'justify-start' : 'justify-end')}
+    >
+      {/* 时间线圆点 */}
+      <div className="absolute left-1/2 -translate-x-1/2 z-10">
+        <div className="timeline-dot w-4 h-4 rounded-full" />
+      </div>
+
+      {/* 卡片 */}
+      <div className={cn(
+        'w-[44%] liquid-glass rounded-2xl p-5',
+        isLeft ? 'mr-auto pl-6' : 'ml-auto pr-6 text-right'
+      )}>
+        <div className={cn('flex items-center gap-3 mb-2', isLeft ? '' : 'flex-row-reverse')}>
+          <span className="text-2xl">{item.icon}</span>
+          <span className="text-sm text-muted-foreground font-medium">{item.year}</span>
+        </div>
+        <p className="text-base sm:text-lg text-foreground/90 leading-relaxed">
+          {item.text}
+        </p>
+      </div>
+    </div>
+  )
+}
+
 function AboutPage({ onNavigate }: { onNavigate: (id: PageId) => void }) {
   return (
     <PageShell>
-      <div className="animate-fade-rise w-full max-w-2xl mx-auto text-left">
+      <div className="animate-fade-rise w-full max-w-3xl mx-auto text-left">
         <h1 className="text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] tracking-[-1px] mb-6"
           style={{ fontFamily: "'Instrument Serif', serif" }}>
           {about.title}
         </h1>
-        <p className="text-muted-foreground text-base sm:text-lg leading-relaxed whitespace-pre-line mb-12">
+        <p className="text-muted-foreground text-base sm:text-lg leading-relaxed whitespace-pre-line mb-16">
           {about.intro}
         </p>
-        <div className="space-y-8">
-          {about.achievements.map((item, i) => (
-            <div key={i} className="flex items-start gap-5 animate-fade-rise-delay"
-              style={{ animationDelay: `${0.1 + i * 0.1}s` }}>
-              <span className="shrink-0 inline-flex items-center px-4 py-1.5 text-sm rounded-full liquid-glass text-muted-foreground">
-                {item.year}
-              </span>
-              <p className="text-base sm:text-lg text-foreground/90 leading-relaxed">
-                {item.text}
-              </p>
-            </div>
-          ))}
+
+        {/* 时间线 */}
+        <div className="relative">
+          {/* 中间竖线 */}
+          <div className="timeline-line absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-[2px]" />
+
+          <div className="space-y-12 pb-4">
+            {about.achievements.map((item, i) => (
+              <TimelineItem key={i} item={item} index={i} />
+            ))}
+          </div>
         </div>
       </div>
+
       <button
         onClick={() => onNavigate('articles')}
         className="animate-fade-rise-delay-2 cursor-pointer liquid-glass rounded-full px-12 py-4 text-base text-foreground mt-14 hover:scale-[1.03] transition-transform"
@@ -178,7 +363,10 @@ function AboutPage({ onNavigate }: { onNavigate: (id: PageId) => void }) {
   )
 }
 
-/** ── Contact ── */
+/* ════════════════════════════════════════════════════
+ * Contact Page
+ * ════════════════════════════════════════════════════ */
+
 function ContactPage() {
   return (
     <PageShell>
@@ -197,7 +385,10 @@ function ContactPage() {
   )
 }
 
-/** ── Articles ── */
+/* ════════════════════════════════════════════════════
+ * Articles Page
+ * ════════════════════════════════════════════════════ */
+
 function ArticlesPage({ onNavigate }: { onNavigate: (id: PageId) => void }) {
   return (
     <PageShell>
@@ -216,6 +407,10 @@ function ArticlesPage({ onNavigate }: { onNavigate: (id: PageId) => void }) {
   )
 }
 
+/* ════════════════════════════════════════════════════
+ * App
+ * ════════════════════════════════════════════════════ */
+
 const pages: Record<PageId, (props: { onNavigate: (id: PageId) => void }) => React.ReactNode> = {
   home: (props) => <HomePage {...props} />,
   about: (props) => <AboutPage {...props} />,
@@ -225,13 +420,20 @@ const pages: Record<PageId, (props: { onNavigate: (id: PageId) => void }) => Rea
 
 function App() {
   const [page, setPage] = useState<PageId>('home')
+  const [theme, toggleTheme] = useTheme()
+
   return (
     <div className="relative min-h-screen overflow-hidden">
       <video autoPlay loop muted playsInline
         className="absolute inset-0 w-full h-full object-cover z-0">
         <source src={bgVideo.src} type={bgVideo.type} />
       </video>
-      <Navbar currentPage={page} onNavigate={setPage} />
+      <Navbar
+        currentPage={page}
+        onNavigate={setPage}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+      />
       {pages[page]({ onNavigate: setPage })}
     </div>
   )

@@ -53,11 +53,11 @@ export const about = {
   title: '关于我',
   intro: '一名扎根一线的教育实践者。\n相信教育不是灌满一桶水，而是点燃一团火。',
   achievements: [
-    { year: '2025', text: '广元市教师能力大赛一等奖' },
-    { year: '2023/2026', text: '指导学生分获四川省职业技能大赛二等奖、三等奖' },
-    { year: '累计', text: '指导学生获市级、县级奖励 20 余次' },
-    { year: '荣誉', text: '优秀指导教师称号 · 教坛新秀称号' },
-  ] as { year: string; text: string }[],
+    { year: '2025', text: '广元市教师能力大赛一等奖', icon: '🏆' },
+    { year: '2023/2026', text: '指导学生分获四川省职业技能大赛二等奖、三等奖', icon: '🎯' },
+    { year: '累计', text: '指导学生获市级、县级奖励 20 余次', icon: '📊' },
+    { year: '荣誉', text: '优秀指导教师称号 · 教坛新秀称号', icon: '⭐' },
+  ] as { year: string; text: string; icon: string }[],
   continueBtn: '继续',
 }
 
@@ -86,3 +86,13 @@ export const bgVideo = {
   src: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4',
   type: 'video/mp4',
 }
+
+/** ── 名言引用 ── */
+export const quotes: { text: string; author: string }[] = [
+  { text: '教育不是灌满一桶水，而是点燃一团火。', author: '苏格拉底' },
+  { text: '教育的根是苦的，但其果实是甜的。', author: '亚里士多德' },
+  { text: '教育的目的，是让人成为他自己。', author: '卡尔·罗杰斯' },
+  { text: '真正的教育，是让自己成为不需要老师的人。', author: '佚名' },
+  { text: '教育的艺术，在于唤醒和鼓舞。', author: '第斯多惠' },
+  { text: '教育的本质意味着：一棵树摇动另一棵树，一朵云推动另一朵云，一个灵魂唤醒另一个灵魂。', author: '雅斯贝尔斯' },
+]

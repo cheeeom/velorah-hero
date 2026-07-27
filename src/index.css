@@ -3,6 +3,7 @@
 
 @import "tailwindcss";
 
+/* ── Dark theme (default) ── */
 :root {
   --font-display: 'Instrument Serif', serif;
   --font-body: 'Inter', sans-serif;
@@ -16,6 +17,30 @@
   --accent: 0 0% 10%;
   --border: 0 0% 18%;
   --input: 0 0% 18%;
+  --glass-bg: rgba(255, 255, 255, 0.01);
+  --glass-border-top: rgba(255,255,255,.45);
+  --glass-border-mid: rgba(255,255,255,0);
+  --timeline-line: rgba(255,255,255,.2);
+  --timeline-dot: rgba(255,255,255,.6);
+}
+
+/* ── Light theme ── */
+:root.light {
+  --background: 210 20% 98%;
+  --foreground: 222 47% 11%;
+  --muted-foreground: 215 16% 47%;
+  --primary: 222 47% 11%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 20% 92%;
+  --muted: 210 20% 92%;
+  --accent: 210 20% 90%;
+  --border: 215 20% 80%;
+  --input: 215 20% 80%;
+  --glass-bg: rgba(0, 0, 0, 0.02);
+  --glass-border-top: rgba(0,0,0,.12);
+  --glass-border-mid: rgba(0,0,0,0);
+  --timeline-line: rgba(0,0,0,.15);
+  --timeline-dot: rgba(0,0,0,.4);
 }
 
 body {
@@ -25,8 +50,10 @@ body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+  transition: background-color 0.5s ease, color 0.5s ease;
 }
 
+/* ── Fade rise animation ── */
 @keyframes fade-rise {
   from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -36,14 +63,16 @@ body {
 .animate-fade-rise-delay   { animation: fade-rise 0.8s ease-out 0.2s both; }
 .animate-fade-rise-delay-2 { animation: fade-rise 0.8s ease-out 0.4s both; }
 
+/* ── Liquid glass ── */
 .liquid-glass {
-  background: rgba(255, 255, 255, 0.01);
+  background: var(--glass-bg);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   border: none;
   box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
   position: relative;
   overflow: hidden;
+  transition: background 0.5s ease;
 }
 
 .liquid-glass::before {
@@ -53,11 +82,54 @@ body {
   border-radius: inherit;
   padding: 1.4px;
   background: linear-gradient(180deg,
-    rgba(255,255,255,.45) 0%, rgba(255,255,255,.15) 20%,
-    rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%,
-    rgba(255,255,255,.15) 80%, rgba(255,255,255,.45) 100%);
+    var(--glass-border-top) 0%, rgba(255,255,255,.15) 20%,
+    var(--glass-border-mid) 40%, var(--glass-border-mid) 60%,
+    rgba(255,255,255,.15) 80%, var(--glass-border-top) 100%);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
 }
+
+/* ── Timeline ── */
+.timeline-item {
+  opacity: 0;
+  transform: translateX(-30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.timeline-item.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.timeline-item:nth-child(even) {
+  transform: translateX(30px);
+}
+
+.timeline-item:nth-child(even).visible {
+  transform: translateX(0);
+}
+
+.timeline-line {
+  background: var(--timeline-line);
+}
+
+.timeline-dot {
+  background: var(--timeline-dot);
+  box-shadow: 0 0 0 4px hsl(var(--background)), 0 0 12px var(--timeline-dot);
+}
+
+/* ── Quote carousel ── */
+@keyframes quote-fade-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes quote-fade-out {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-12px); }
+}
+
+.quote-enter { animation: quote-fade-in 0.6s ease-out both; }
+.quote-exit  { animation: quote-fade-out 0.4s ease-in both; }
