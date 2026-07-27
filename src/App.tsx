@@ -312,18 +312,18 @@ function QuoteCarousel() {
   const q = quotes[index]
 
   return (
-    <div className="max-w-2xl mx-auto text-center px-4">
+    <div className="max-w-3xl mx-auto text-center px-4">
       <div
         key={index}
         className={phase === 'enter' ? 'quote-enter' : 'quote-exit'}
       >
         <p
-          className="text-lg sm:text-xl md:text-2xl leading-relaxed text-foreground/80 italic"
+          className="text-xl sm:text-2xl md:text-3xl leading-relaxed text-foreground italic"
           style={{ fontFamily: "'Instrument Serif', serif" }}
         >
           "{q.text}"
         </p>
-        <p className="text-sm text-muted-foreground mt-3">— {q.author}</p>
+        <p className="text-base text-muted-foreground mt-4">— {q.author}</p>
       </div>
     </div>
   )
@@ -352,12 +352,8 @@ function HomePage({ onNavigate }: { onNavigate: (id: PageId) => void }) {
         {hero.heroCta}
       </button>
 
-      {/* 名言轮播 */}
-      <div className="animate-fade-rise-delay-2 mt-16 mb-4">
-        <QuoteCarousel />
-      </div>
-
-      <div className="animate-fade-rise-delay-2 flex items-center gap-6 mt-10">
+      {/* 社交链接 */}
+      <div className="animate-fade-rise-delay-2 flex items-center gap-6 mt-12">
         {socialLinks.map((link) => (
           <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer"
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -397,14 +393,14 @@ function TimelineItem({ item, index }: {
 
       {/* 卡片 */}
       <div className={cn(
-        'w-[44%] liquid-glass rounded-2xl p-5',
+        'w-[44%] rounded-2xl p-6 timeline-card',
         isLeft ? 'mr-auto pl-6' : 'ml-auto pr-6 text-right'
       )}>
-        <div className={cn('flex items-center gap-3 mb-2', isLeft ? '' : 'flex-row-reverse')}>
+        <div className={cn('flex items-center gap-3 mb-3', isLeft ? '' : 'flex-row-reverse')}>
           <span className="text-2xl">{item.icon}</span>
-          <span className="text-sm text-muted-foreground font-medium">{item.year}</span>
+          <span className="text-sm text-foreground/70 font-semibold tracking-wide">{item.year}</span>
         </div>
-        <p className="text-base sm:text-lg text-foreground/90 leading-relaxed">
+        <p className="text-base sm:text-lg text-foreground leading-relaxed font-medium">
           {item.text}
         </p>
       </div>
@@ -427,7 +423,7 @@ function AboutPage({ onNavigate }: { onNavigate: (id: PageId) => void }) {
         {/* 数字计数器 */}
         <div className="grid grid-cols-3 gap-6 mb-16 max-w-lg">
           <Counter target={20} suffix="+" label="指导学生获奖" />
-          <Counter target={4} suffix="项" label="省级以上荣誉" />
+          <Counter target={2} suffix="项" label="省级以上荣誉" />
           <Counter target={2} suffix="项" label="个人称号" />
         </div>
 
@@ -488,14 +484,19 @@ function ContactPage() {
 function ArticlesPage({ onNavigate }: { onNavigate: (id: PageId) => void }) {
   return (
     <PageShell>
-      <div className="animate-fade-rise text-center">
+      {/* 名言轮播 */}
+      <div className="animate-fade-rise w-full mb-16">
+        <QuoteCarousel />
+      </div>
+
+      <div className="animate-fade-rise-delay text-center">
         <h1 className="text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] tracking-[-1px] mb-6"
           style={{ fontFamily: "'Instrument Serif', serif" }}>
           {articles.title}
         </h1>
         <p className="text-muted-foreground text-base">{articles.placeholder}</p>
         <button onClick={() => onNavigate('home')}
-          className="animate-fade-rise-delay cursor-pointer liquid-glass rounded-full px-10 py-4 text-base text-foreground mt-10 hover:scale-[1.03] transition-transform">
+          className="animate-fade-rise-delay-2 cursor-pointer liquid-glass rounded-full px-10 py-4 text-base text-foreground mt-10 hover:scale-[1.03] transition-transform">
           {articles.backBtn}
         </button>
       </div>
