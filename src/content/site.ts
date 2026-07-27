@@ -68,7 +68,53 @@ export const contact = {
   hint: '点击邮箱可直接发送',
 }
 
-/** ── 文章页（占位）─ */
+/** ── 文章页 ─ */
+export interface ArticleItem {
+  title: string
+  date: string
+  summary: string
+}
+
+export interface ArticleBranch {
+  category: string
+  icon: string
+  articles: ArticleItem[]
+}
+
+export const articleTree: ArticleBranch[] = [
+  {
+    category: '教育随笔',
+    icon: '✍️',
+    articles: [
+      { title: '被标准答案驯化的土地上', date: '2026-07', summary: '当教育只剩下一种正确答案，我们失去了什么？' },
+      { title: '课堂里的沉默者', date: '2026-05', summary: '那些从不举手的学生，往往想得最多。' },
+    ],
+  },
+  {
+    category: '教学实践',
+    icon: '🌱',
+    articles: [
+      { title: '指导学生参赛的三个关键', date: '2026-03', summary: '从市级到省级，一路走来总结的方法论。' },
+      { title: '项目式教学初探', date: '2025-12', summary: '把课堂还给学生，把学习还给生活。' },
+    ],
+  },
+  {
+    category: '读书笔记',
+    icon: '📖',
+    articles: [
+      { title: '读《教育的使命》', date: '2026-06', summary: '雅斯贝尔斯的启示：教育是唤醒，不是塑造。' },
+    ],
+  },
+  {
+    category: '成长反思',
+    icon: '🌿',
+    articles: [
+      { title: '从教坛新秀到优秀指导教师', date: '2026-01', summary: '三年成长路，不是头衔的叠加，而是视角的转变。' },
+      { title: '比赛之外的教育的意义', date: '2025-09', summary: '获奖不是终点，让学生学会思考才是。' },
+    ],
+  },
+]
+
 export const articles = {
   title: '文章',
   placeholder: '内容待补充，敬请期待……',

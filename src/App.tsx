@@ -7,6 +7,7 @@ import {
   about,
   contact,
   articles,
+  articleTree,
   socialLinks,
   bgVideo,
   quotes,
@@ -490,8 +491,102 @@ function ContactPage() {
 }
 
 /* ════════════════════════════════════════════════════
- * Articles Page
+ * Articles Page — 成长树
  * ════════════════════════════════════════════════════ */
+
+function LeafNode({ article, side, delay }: {
+  article: { title: string; date: string; summary: string }
+  side: 'left' | 'right'
+  delay: number
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const { ref, visible } = useScrollReveal<HTMLDivElement>()
+
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        'tree-leaf-item relative flex items-center',
+        side === 'left' ? 'justify-end pr-8' : 'justify-start pl-8',
+        visible && 'visible'
+      )}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {/* 叶子小圆点 */}
+      <div className={cn(
+        'absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full leaf-dot',
+        side === 'left' ? 'right-0 translate-x-1/2' : 'left-0 -translate-x-1/2'
+      )} />
+
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className={cn(
+          'tree-leaf text-left cursor-pointer rounded-xl p-4 w-full max-w-xs',
+          side === 'left' ? 'text-right' : 'text-left'
+        )}
+      >
+        <div className={cn('flex items-center gap-2', side === 'left' ? 'justify-end' : 'justify-start')}>
+          <span className="text-xs text-muted-foreground">{article.date}</span>
+          <span className="text-xs text-foreground/40">·</span>
+          <span className="text-sm font-medium text-foreground">{article.title}</span>
+        </div>
+        {expanded && (
+          <p className={cn('text-sm text-muted-foreground mt-2 leading-relaxed quote-enter',
+            side === 'left' ? 'text-right' : 'text-left')}>
+            {article.summary}
+          </p>
+        )}
+      </button>
+    </div>
+  )
+}
+
+function TreeBranch({ branch, index }: {
+  branch: { category: string; icon: string; articles: { title: string; date: string; summary: string }[] }
+  index: number
+}) {
+  const { ref, visible } = useScrollReveal<HTMLDivElement>()
+  const side = index % 2 === 0 ? 'left' : 'right'
+
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        'tree-branch relative flex items-center w-full min-h-[60px]',
+        side === 'left' ? 'justify-start' : 'justify-end',
+        visible && 'visible'
+      )}
+    >
+      {/* 分支横线 */}
+      <div className={cn(
+        'absolute top-1/2 -translate-y-1/2 h-[1.5px] branch-line',
+        side === 'left' ? 'left-[50%] w-[8%]' : 'right-[50%] w-[8%]'
+      )} />
+
+      {/* 分支标签 */}
+      <div className={cn(
+        'tree-branch-label flex items-center gap-2 rounded-full px-5 py-2.5',
+        side === 'left' ? 'ml-auto' : 'mr-auto'
+      )}>
+        <span className="text-lg">{branch.icon}</span>
+        <span className="text-base sm:text-lg font-medium" style={{ fontFamily: "'Instrument Serif', serif" }}>
+          {branch.category}
+        </span>
+        <span className="text-xs text-muted-foreground ml-1">({branch.articles.length})</span>
+      </div>
+
+      {/* 叶子节点 */}
+      <div className={cn(
+        'absolute flex flex-col gap-3',
+        side === 'left' ? 'right-[58%] items-end' : 'left-[58%] items-start'
+      )}>
+        {branch.articles.map((article, i) => (
+          <LeafNode key={i} article={article} side={side} delay={i * 100} />
+        ))}
+      </div>
+    </div>
+  )
+}
 
 function ArticlesPage({ onNavigate }: { onNavigate: (id: PageId) => void }) {
   return (
@@ -501,16 +596,34 @@ function ArticlesPage({ onNavigate }: { onNavigate: (id: PageId) => void }) {
         <QuoteCarousel />
       </div>
 
-      <div className="animate-fade-rise-delay text-center">
-        <h1 className="text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] tracking-[-1px] mb-6"
+      <div className="animate-fade-rise w-full max-w-4xl mx-auto">
+        <h1 className="text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] tracking-[-1px] mb-4 text-center"
           style={{ fontFamily: "'Instrument Serif', serif" }}>
           {articles.title}
         </h1>
-        <p className="text-muted-foreground text-base">{articles.placeholder}</p>
-        <button onClick={() => onNavigate('home')}
-          className="animate-fade-rise-delay-2 cursor-pointer liquid-glass rounded-full px-10 py-4 text-base text-foreground mt-10 hover:scale-[1.03] transition-transform">
-          {articles.backBtn}
-        </button>
+        <p className="text-center text-muted-foreground text-sm mb-16">每一篇文章，都是一片生长的叶子 🌱</p>
+
+        {/* 成长树 */}
+        <div className="relative w-full">
+          {/* 主干 */}
+          <div className="tree-trunk absolute left-1/2 -translate-x-1/2 top-0 bottom-0" />
+
+          {/* 树根装饰 */}
+          <div className="tree-root absolute left-1/2 -translate-x-1/2 -bottom-2" />
+
+          <div className="space-y-20 pb-8">
+            {articleTree.map((branch, i) => (
+              <TreeBranch key={i} branch={branch} index={i} />
+            ))}
+          </div>
+        </div>
+
+        <div className="text-center mt-16">
+          <button onClick={() => onNavigate('home')}
+            className="animate-fade-rise-delay cursor-pointer liquid-glass rounded-full px-10 py-4 text-base text-foreground hover:scale-[1.03] transition-transform">
+            {articles.backBtn}
+          </button>
+        </div>
       </div>
     </PageShell>
   )

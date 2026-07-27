@@ -173,3 +173,118 @@ body {
 
 .quote-enter { animation: quote-fade-in 0.6s ease-out both; }
 .quote-exit  { animation: quote-fade-out 0.4s ease-in both; }
+
+/* ── Growth Tree ── */
+.tree-trunk {
+  width: 2.5px;
+  background: linear-gradient(180deg,
+    rgba(255,255,255,.25) 0%,
+    rgba(255,255,255,.15) 50%,
+    rgba(255,255,255,.08) 100%);
+  border-radius: 2px;
+}
+
+:root.light .tree-trunk {
+  background: linear-gradient(180deg,
+    rgba(0,0,0,.2) 0%,
+    rgba(0,0,0,.12) 50%,
+    rgba(0,0,0,.06) 100%);
+}
+
+.tree-root {
+  width: 40px;
+  height: 12px;
+  border-bottom: 2.5px solid rgba(255,255,255,.15);
+  border-radius: 0 0 50% 50%;
+}
+
+:root.light .tree-root {
+  border-color: rgba(0,0,0,.1);
+}
+
+.branch-line {
+  background: rgba(255,255,255,.12);
+}
+
+:root.light .branch-line {
+  background: rgba(0,0,0,.1);
+}
+
+.tree-branch {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.tree-branch.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.tree-branch-label {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 12px rgba(0,0,0,.15), inset 0 1px 1px rgba(255,255,255,.1);
+  transition: background 0.5s ease, border-color 0.5s ease, transform 0.3s ease;
+}
+
+.tree-branch-label:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.03);
+}
+
+:root.light .tree-branch-label {
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 12px rgba(0,0,0,.06), inset 0 1px 1px rgba(255,255,255,.4);
+}
+
+:root.light .tree-branch-label:hover {
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.tree-leaf-item {
+  opacity: 0;
+  transform: translateX(side === 'left' ? -20px : 20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.tree-leaf-item.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.leaf-dot {
+  background: rgba(255,255,255,.5);
+  box-shadow: 0 0 0 3px hsl(var(--background)), 0 0 8px rgba(255,255,255,.3);
+  transition: all 0.3s ease;
+}
+
+:root.light .leaf-dot {
+  background: rgba(0,0,0,.35);
+  box-shadow: 0 0 0 3px hsl(var(--background)), 0 0 8px rgba(0,0,0,.15);
+}
+
+.tree-leaf {
+  background: transparent;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.tree-leaf:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 12px rgba(0,0,0,.1);
+}
+
+:root.light .tree-leaf:hover {
+  background: rgba(255, 255, 255, 0.5);
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+.tree-leaf:hover .leaf-dot {
+  box-shadow: 0 0 0 3px hsl(var(--background)), 0 0 16px rgba(255,255,255,.6);
+  transform: scale(1.3);
+}
