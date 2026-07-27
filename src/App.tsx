@@ -412,10 +412,22 @@ function AboutPage({ onNavigate }: { onNavigate: (id: PageId) => void }) {
   return (
     <PageShell>
       <div className="animate-fade-rise w-full max-w-3xl mx-auto text-left">
-        <h1 className="text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] tracking-[-1px] mb-6"
-          style={{ fontFamily: "'Instrument Serif', serif" }}>
-          {about.title}
-        </h1>
+        {/* 头像 + 标题 */}
+        <div className="flex items-center gap-6 mb-8">
+          <div className="avatar-ring shrink-0">
+            <img
+              src="/velorah-hero/avatar.jpg"
+              alt="严其"
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover"
+            />
+          </div>
+          <div>
+            <h1 className="text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] tracking-[-1px]"
+              style={{ fontFamily: "'Instrument Serif', serif" }}>
+              {about.title}
+            </h1>
+          </div>
+        </div>
         <p className="text-muted-foreground text-base sm:text-lg leading-relaxed whitespace-pre-line mb-12">
           {about.intro}
         </p>

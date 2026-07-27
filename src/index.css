@@ -120,6 +120,20 @@ body {
   box-shadow: 0 0 0 4px hsl(var(--background)), 0 0 12px var(--timeline-dot);
 }
 
+/* ── Avatar ring ── */
+.avatar-ring {
+  border-radius: 50%;
+  padding: 3px;
+  background: linear-gradient(135deg, rgba(255,255,255,.3), rgba(255,255,255,.05), rgba(255,255,255,.3));
+  box-shadow: 0 4px 16px rgba(0,0,0,.25);
+  transition: background 0.5s ease;
+}
+
+:root.light .avatar-ring {
+  background: linear-gradient(135deg, rgba(0,0,0,.15), rgba(0,0,0,.03), rgba(0,0,0,.15));
+  box-shadow: 0 4px 16px rgba(0,0,0,.1);
+}
+
 /* ── Timeline card (enhanced acrylic) ── */
 .timeline-card {
   background: rgba(255, 255, 255, 0.08);
