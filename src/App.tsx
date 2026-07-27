@@ -76,9 +76,10 @@ function useScrollReveal<T extends HTMLElement>() {
 function Logo() {
   return (
     <span
-      className="text-2xl md:text-3xl tracking-tight text-foreground select-none flex items-baseline gap-2"
+      className="text-2xl md:text-3xl tracking-tight text-foreground select-none flex items-center gap-2.5"
       style={{ fontFamily: "'Instrument Serif', serif" }}
     >
+      <CELogo size={32} />
       {brand.nameCN}
       {brand.nameEN && (
         <span
@@ -199,6 +200,85 @@ function HeroHeading({ parts }: {
 }
 
 /* ════════════════════════════════════════════════════
+ * Animated Counter (数字计数器)
+ * ════════════════════════════════════════════════════ */
+
+function useCountUp(target: number, duration: number = 2000, start: boolean = false) {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    if (!start) return
+    let raf = 0
+    const startTime = performance.now()
+    const animate = (now: number) => {
+      const progress = Math.min((now - startTime) / duration, 1)
+      // easeOutExpo
+      const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress)
+      setCount(Math.round(eased * target))
+      if (progress < 1) raf = requestAnimationFrame(animate)
+    }
+    raf = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(raf)
+  }, [target, duration, start])
+
+  return count
+}
+
+function Counter({ target, suffix, label }: { target: number; suffix?: string; label: string }) {
+  const { ref, visible } = useScrollReveal<HTMLDivElement>()
+  const count = useCountUp(target, 2000, visible)
+
+  return (
+    <div ref={ref} className="text-center">
+      <div
+        className="text-4xl sm:text-5xl md:text-6xl text-foreground font-normal"
+        style={{ fontFamily: "'Instrument Serif', serif" }}
+      >
+        {count}{suffix}
+      </div>
+      <div className="text-sm sm:text-base text-muted-foreground mt-2">{label}</div>
+    </div>
+  )
+}
+
+/* ════════════════════════════════════════════════════
+ * CE Logo (字母组合徽标)
+ * ════════════════════════════════════════════════════ */
+
+function CELogo({ size = 36 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 48 48"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="shrink-0"
+    >
+      {/* 外圈 */}
+      <circle
+        cx="24" cy="24" r="22"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        opacity="0.4"
+      />
+      {/* CE 字母 */}
+      <text
+        x="24" y="25"
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontFamily="Instrument Serif, serif"
+        fontSize="20"
+        fill="currentColor"
+        fontStyle="italic"
+      >
+        CE
+      </text>
+    </svg>
+  )
+}
+
+/* ════════════════════════════════════════════════════
  * Page Shell
  * ════════════════════════════════════════════════════ */
 
@@ -304,7 +384,11 @@ function TimelineItem({ item, index }: {
   return (
     <div
       ref={ref}
-      className={cn('timeline-item relative flex items-center w-full', isLeft ? 'justify-start' : 'justify-end')}
+      className={cn(
+        'timeline-item relative flex items-center w-full',
+        isLeft ? 'justify-start' : 'justify-end',
+        visible && 'visible'
+      )}
     >
       {/* 时间线圆点 */}
       <div className="absolute left-1/2 -translate-x-1/2 z-10">
@@ -336,9 +420,21 @@ function AboutPage({ onNavigate }: { onNavigate: (id: PageId) => void }) {
           style={{ fontFamily: "'Instrument Serif', serif" }}>
           {about.title}
         </h1>
-        <p className="text-muted-foreground text-base sm:text-lg leading-relaxed whitespace-pre-line mb-16">
+        <p className="text-muted-foreground text-base sm:text-lg leading-relaxed whitespace-pre-line mb-12">
           {about.intro}
         </p>
+
+        {/* 数字计数器 */}
+        <div className="grid grid-cols-3 gap-6 mb-16 max-w-lg">
+          <Counter target={20} suffix="+" label="指导学生获奖" />
+          <Counter target={4} suffix="项" label="省级以上荣誉" />
+          <Counter target={2} suffix="项" label="个人称号" />
+        </div>
+
+        {/* 时间线标题 */}
+        <h2 className="text-xl sm:text-2xl text-muted-foreground mb-8" style={{ fontFamily: "'Instrument Serif', serif" }}>
+          获奖经历
+        </h2>
 
         {/* 时间线 */}
         <div className="relative">
