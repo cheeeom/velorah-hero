@@ -1,12 +1,22 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/velorah-hero/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>严其 · Chee Eom</title>
-    <script type="module" crossorigin src="/velorah-hero/assets/index-CbIX_9cZ.js"></script>
-    <link rel="stylesheet" crossorigin href="/velorah-hero/assets/index-DjUr9mH6.css">
+    <script>
+      // 在首帧渲染前恢复主题，避免亮色用户看到暗色闪烁（FOUC）
+      (function () {
+        try {
+          if (localStorage.getItem('theme') === 'light') {
+            document.documentElement.classList.add('light')
+          }
+        } catch (e) {}
+      })()
+    </script>
+    <script type="module" crossorigin src="/velorah-hero/assets/index-zfe5bTxx.js"></script>
+    <link rel="stylesheet" crossorigin href="/velorah-hero/assets/index-B-r_0pRa.css">
   </head>
   <body>
     <div id="root"></div>
