@@ -71,22 +71,90 @@ function useScrollReveal<T extends HTMLElement>() {
 }
 
 /* ════════════════════════════════════════════════════
+ * Hash Routing
+ * 让每个页面都有可分享 / 可刷新的 URL，形如 #/about
+ * ════════════════════════════════════════════════════ */
+
+const PAGE_IDS: PageId[] = ['home', 'about', 'articles', 'contact']
+
+/** 解析 URL hash；非法值回落到首页 */
+function readHash(): PageId {
+  const raw = window.location.hash.replace(/^#\/?/, '')
+  return (PAGE_IDS as string[]).includes(raw) ? (raw as PageId) : 'home'
+}
+
+function useHashRoute(): [PageId, (id: PageId) => void] {
+  const [page, setPage] = useState<PageId>(readHash)
+
+  // 支持浏览器前进 / 后退
+  useEffect(() => {
+    const onHashChange = () => {
+      setPage(readHash())
+      window.scrollTo({ top: 0 })
+    }
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
+
+  const navigate = useCallback((id: PageId) => {
+    setPage(id) // 立即切换，不必等 hashchange 事件
+    const target = '#/' + id
+    if (window.location.hash !== target) {
+      window.location.hash = target // 写入历史：可分享、可后退
+    }
+    window.scrollTo({ top: 0 }) // 切页回到顶部
+  }, [])
+
+  return [page, navigate]
+}
+
+/* ════════════════════════════════════════════════════
+ * Background Video
+ * 小屏省流量、尊重"减少动效"偏好；加载失败或不支持时优雅退场
+ * （底层是 body 的 --background 底色，不会出现黑屏）
+ * ════════════════════════════════════════════════════ */
+
+function BackgroundVideo() {
+  const [enabled, setEnabled] = useState(false)
+
+  useEffect(() => {
+    const wide = window.matchMedia('(min-width: 768px)').matches
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    setEnabled(wide && !calm)
+  }, [])
+
+  if (!enabled) return null
+
+  return (
+    <video
+      className="absolute inset-0 w-full h-full object-cover z-0"
+      autoPlay
+      loop
+      muted
+      playsInline
+      preload="metadata"
+      poster={bgVideo.poster}
+      aria-hidden="true"
+      tabIndex={-1}
+      onError={() => setEnabled(false)}
+    >
+      <source src={bgVideo.src} type={bgVideo.type} />
+      <source src={bgVideo.fallbackSrc} type={bgVideo.type} />
+    </video>
+  )
+}
+
+/* ════════════════════════════════════════════════════
  * Logo
  * ════════════════════════════════════════════════════ */
 
 function Logo() {
   return (
-    <span
-      className="text-2xl md:text-3xl tracking-tight text-foreground select-none flex items-center gap-2.5"
-      style={{ fontFamily: "'Instrument Serif', serif" }}
-    >
+    <span className="font-display text-2xl md:text-3xl tracking-tight text-foreground select-none flex items-center gap-2.5">
       <CELogo size={32} />
       {brand.nameCN}
       {brand.nameEN && (
-        <span
-          className="text-base md:text-lg text-muted-foreground font-normal"
-          style={{ fontFamily: "'Inter', sans-serif" }}
-        >
+        <span className="font-body text-base md:text-lg text-muted-foreground font-normal">
           {brand.nameEN}
         </span>
       )}
@@ -134,50 +202,115 @@ function Navbar({ currentPage, onNavigate, theme, onToggleTheme }: {
   theme: Theme
   onToggleTheme: () => void
 }) {
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  // 切页后收起菜单；Esc 关闭
+  const go = useCallback((id: PageId) => {
+    setMenuOpen(false)
+    onNavigate(id)
+  }, [onNavigate])
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [menuOpen])
+
+  const nextCta = currentPage === 'home' ? 'about' : 'articles'
+
   return (
-    <nav className="relative z-10 flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
-      <button
-        onClick={() => onNavigate('home')}
-        className="bg-transparent border-none cursor-pointer"
-      >
-        <Logo />
-      </button>
-
-      <div className="hidden md:flex items-center gap-10">
-        {navLinks.map((item) => (
-          <button
-            key={item.target}
-            onClick={() => onNavigate(item.target)}
-            className={cn(
-              'bg-transparent border-none cursor-pointer text-sm transition-colors',
-              currentPage === item.target
-                ? 'text-foreground'
-                : 'text-muted-foreground hover:text-foreground'
-            )}
-            style={{ fontFamily: "'Instrument Serif', serif" }}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex items-center gap-3">
-        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+    <nav className="relative z-20 px-6 py-4 max-w-7xl mx-auto">
+      <div className="flex items-center justify-between">
         <button
-          onClick={() => onNavigate(currentPage === 'home' ? 'about' : 'articles')}
-          className="hidden md:inline-flex cursor-pointer liquid-glass rounded-full px-6 py-2.5 text-sm text-foreground hover:scale-[1.03] transition-transform"
+          onClick={() => go('home')}
+          className="bg-transparent border-none cursor-pointer"
+          aria-label="回到首页"
         >
-          {currentPage === 'home' ? hero.navCta : '开始探索'}
+          <Logo />
         </button>
+
+        <div className="hidden md:flex items-center gap-10">
+          {navLinks.map((item) => (
+            <button
+              key={item.target}
+              onClick={() => go(item.target)}
+              className={cn(
+                'bg-transparent border-none cursor-pointer font-display text-sm transition-colors',
+                currentPage === item.target
+                  ? 'text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+          <button
+            onClick={() => go(nextCta)}
+            className="hidden md:inline-flex cursor-pointer liquid-glass rounded-full px-6 py-2.5 text-sm text-foreground hover:scale-[1.03] transition-transform"
+          >
+            {currentPage === 'home' ? hero.navCta : hero.navCtaAlt}
+          </button>
+          {/* 移动端菜单开关 */}
+          <button
+            onClick={() => setMenuOpen((v) => !v)}
+            className="md:hidden liquid-glass rounded-full w-10 h-10 flex items-center justify-center text-foreground cursor-pointer"
+            aria-label={menuOpen ? '关闭菜单' : '打开菜单'}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-menu"
+          >
+            {menuOpen ? (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+              </svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <line x1="4" y1="6" x2="20" y2="6" />
+                <line x1="4" y1="12" x2="20" y2="12" />
+                <line x1="4" y1="18" x2="20" y2="18" />
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
 
-      <button className="md:hidden text-foreground cursor-pointer bg-transparent border-none">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-          <line x1="4" y1="6" x2="20" y2="6" />
-          <line x1="4" y1="12" x2="20" y2="12" />
-          <line x1="4" y1="18" x2="20" y2="18" />
-        </svg>
-      </button>
+      {/* 移动端下拉菜单 */}
+      {menuOpen && (
+        <div
+          id="mobile-menu"
+          className="md:hidden absolute left-0 right-0 top-full mt-2 mx-4 rounded-2xl liquid-glass overflow-hidden"
+        >
+          <div className="flex flex-col p-2">
+            {navLinks.map((item) => (
+              <button
+                key={item.target}
+                onClick={() => go(item.target)}
+                className={cn(
+                  'cursor-pointer rounded-xl px-4 py-3 text-left font-display text-base transition-colors',
+                  currentPage === item.target
+                    ? 'text-foreground nav-item-active'
+                    : 'text-muted-foreground hover:text-foreground nav-item-idle'
+                )}
+              >
+                {item.label}
+              </button>
+            ))}
+            <button
+              onClick={() => go(nextCta)}
+              className="mt-1 cursor-pointer rounded-xl px-4 py-3 text-center font-display text-base text-foreground nav-item-idle"
+            >
+              {currentPage === 'home' ? hero.navCta : hero.navCtaAlt}
+            </button>
+          </div>
+        </div>
+      )}
     </nav>
   )
 }
@@ -231,10 +364,7 @@ function Counter({ target, suffix, label }: { target: number; suffix?: string; l
 
   return (
     <div ref={ref} className="text-center">
-      <div
-        className="text-4xl sm:text-5xl md:text-6xl text-foreground font-normal"
-        style={{ fontFamily: "'Instrument Serif', serif" }}
-      >
+      <div className="font-display text-4xl sm:text-5xl md:text-6xl text-foreground font-normal">
         {count}{suffix}
       </div>
       <div className="text-sm sm:text-base text-muted-foreground mt-2">{label}</div>
@@ -268,7 +398,7 @@ function CELogo({ size = 36 }: { size?: number }) {
         x="24" y="25"
         textAnchor="middle"
         dominantBaseline="central"
-        fontFamily="Instrument Serif, serif"
+        fontFamily="Instrument Serif, Songti SC, SimSun, serif"
         fontSize="20"
         fill="currentColor"
         fontStyle="italic"
@@ -300,14 +430,18 @@ function QuoteCarousel() {
   const [phase, setPhase] = useState<'enter' | 'exit'>('enter')
 
   useEffect(() => {
+    let swap: ReturnType<typeof setTimeout>
     const timer = setInterval(() => {
       setPhase('exit')
-      setTimeout(() => {
+      swap = setTimeout(() => {
         setIndex((prev) => (prev + 1) % quotes.length)
         setPhase('enter')
       }, 400)
     }, 8000)
-    return () => clearInterval(timer)
+    return () => {
+      clearInterval(timer)
+      clearTimeout(swap)
+    }
   }, [])
 
   const q = quotes[index]
@@ -318,10 +452,7 @@ function QuoteCarousel() {
         key={index}
         className={phase === 'enter' ? 'quote-enter' : 'quote-exit'}
       >
-        <p
-          className="text-xl sm:text-2xl md:text-3xl leading-relaxed text-foreground italic"
-          style={{ fontFamily: "'Instrument Serif', serif" }}
-        >
+        <p className="font-display text-xl sm:text-2xl md:text-3xl leading-relaxed text-foreground italic">
           "{q.text}"
         </p>
         <p className="text-base text-muted-foreground mt-4">— {q.author}</p>
@@ -337,10 +468,7 @@ function QuoteCarousel() {
 function HomePage({ onNavigate }: { onNavigate: (id: PageId) => void }) {
   return (
     <PageShell>
-      <h1
-        className="animate-fade-rise text-[clamp(1.8rem,6vw,5rem)] leading-[1.05] tracking-[-1.5px] max-w-5xl font-normal mx-auto"
-        style={{ fontFamily: "'Instrument Serif', serif" }}
-      >
+      <h1 className="animate-fade-rise font-display text-[clamp(1.8rem,6vw,5rem)] leading-[1.05] tracking-[-1.5px] max-w-5xl font-normal mx-auto">
         <HeroHeading parts={hero.headingParts} />
       </h1>
       <p className="animate-fade-rise-delay text-muted-foreground text-sm sm:text-base max-w-xl mt-6 leading-relaxed whitespace-pre-line">
@@ -357,8 +485,7 @@ function HomePage({ onNavigate }: { onNavigate: (id: PageId) => void }) {
       <div className="animate-fade-rise-delay-2 flex items-center gap-6 mt-12">
         {socialLinks.map((link) => (
           <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            style={{ fontFamily: "'Instrument Serif', serif" }}>
+            className="font-display text-sm text-muted-foreground hover:text-foreground transition-colors">
             {link.label}
           </a>
         ))}
@@ -417,14 +544,13 @@ function AboutPage({ onNavigate }: { onNavigate: (id: PageId) => void }) {
         <div className="flex items-center gap-6 mb-8">
           <div className="avatar-ring shrink-0">
             <img
-              src="/velorah-hero/avatar.jpg"
+              src={`${import.meta.env.BASE_URL}avatar.jpg`}
               alt="严其"
               className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover"
             />
           </div>
           <div>
-            <h1 className="text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] tracking-[-1px]"
-              style={{ fontFamily: "'Instrument Serif', serif" }}>
+            <h1 className="font-display text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] tracking-[-1px]">
               {about.title}
             </h1>
           </div>
@@ -441,8 +567,8 @@ function AboutPage({ onNavigate }: { onNavigate: (id: PageId) => void }) {
         </div>
 
         {/* 时间线标题 */}
-        <h2 className="text-xl sm:text-2xl text-muted-foreground mb-8" style={{ fontFamily: "'Instrument Serif', serif" }}>
-          获奖经历
+        <h2 className="font-display text-xl sm:text-2xl text-muted-foreground mb-8">
+          {about.achievementsTitle}
         </h2>
 
         {/* 时间线 */}
@@ -476,8 +602,7 @@ function ContactPage() {
   return (
     <PageShell>
       <div className="animate-fade-rise text-center">
-        <h1 className="text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] tracking-[-1px] mb-6"
-          style={{ fontFamily: "'Instrument Serif', serif" }}>
+        <h1 className="font-display text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] tracking-[-1px] mb-6">
           {contact.title}
         </h1>
         <p className="text-muted-foreground text-sm mb-4">{contact.hint}</p>
@@ -507,7 +632,7 @@ function LeafNode({ article, side, delay }: {
       ref={ref}
       className={cn(
         'tree-leaf-item relative flex items-center',
-        side === 'left' ? 'justify-end pr-8' : 'justify-start pl-8',
+        side === 'left' ? 'justify-end pr-8' : 'justify-start pl-8 leaf-right',
         visible && 'visible'
       )}
       style={{ transitionDelay: `${delay}ms` }}
@@ -569,7 +694,7 @@ function TreeBranch({ branch, index }: {
         side === 'left' ? 'ml-auto' : 'mr-auto'
       )}>
         <span className="text-lg">{branch.icon}</span>
-        <span className="text-base sm:text-lg font-medium" style={{ fontFamily: "'Instrument Serif', serif" }}>
+        <span className="font-display text-base sm:text-lg font-medium">
           {branch.category}
         </span>
         <span className="text-xs text-muted-foreground ml-1">({branch.articles.length})</span>
@@ -597,11 +722,10 @@ function ArticlesPage({ onNavigate }: { onNavigate: (id: PageId) => void }) {
       </div>
 
       <div className="animate-fade-rise w-full max-w-4xl mx-auto">
-        <h1 className="text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] tracking-[-1px] mb-4 text-center"
-          style={{ fontFamily: "'Instrument Serif', serif" }}>
+        <h1 className="font-display text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] tracking-[-1px] mb-4 text-center">
           {articles.title}
         </h1>
-        <p className="text-center text-muted-foreground text-sm mb-16">每一篇文章，都是一片生长的叶子 🌱</p>
+        <p className="text-center text-muted-foreground text-sm mb-16">{articles.leafHint}</p>
 
         {/* 成长树 */}
         <div className="relative w-full">
@@ -641,22 +765,23 @@ const pages: Record<PageId, (props: { onNavigate: (id: PageId) => void }) => Rea
 }
 
 function App() {
-  const [page, setPage] = useState<PageId>('home')
+  const [page, navigate] = useHashRoute()
   const [theme, toggleTheme] = useTheme()
+  // 以 JSX 方式渲染当前页面（而非直接调用函数），保证组件边界与 hook 规则不被破坏
+  const CurrentPage = pages[page]
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      <video autoPlay loop muted playsInline
-        className="absolute inset-0 w-full h-full object-cover z-0">
-        <source src={bgVideo.src} type={bgVideo.type} />
-      </video>
+      <BackgroundVideo />
       <Navbar
         currentPage={page}
-        onNavigate={setPage}
+        onNavigate={navigate}
         theme={theme}
         onToggleTheme={toggleTheme}
       />
-      {pages[page]({ onNavigate: setPage })}
+      <main>
+        <CurrentPage onNavigate={navigate} />
+      </main>
     </div>
   )
 }

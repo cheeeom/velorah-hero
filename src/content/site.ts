@@ -45,7 +45,8 @@ export const hero = {
   ].join('\n'),
 
   heroCta: '走进我的世界',
-  navCta: '开始探索',
+  navCta: '开始探索', // 首页导航按钮文案
+  navCtaAlt: '开始探索', // 其他页导航按钮文案（目前与首页相同，可各改各的）
 }
 
 /** ── 关于页 ── */
@@ -59,6 +60,7 @@ export const about = {
     { year: '荣誉', text: '优秀指导教师称号 · 教坛新秀称号', icon: '⭐' },
   ] as { year: string; text: string; icon: string }[],
   continueBtn: '继续',
+  achievementsTitle: '获奖经历',
 }
 
 /** ── 联系页 ── */
@@ -117,6 +119,7 @@ export const articleTree: ArticleBranch[] = [
 
 export const articles = {
   title: '文章',
+  leafHint: '每一篇文章，都是一片生长的叶子 🌱',
   placeholder: '内容待补充，敬请期待……',
   backBtn: '回到首页',
 }
@@ -127,9 +130,14 @@ export const socialLinks = [
   { label: 'Email', href: 'mailto:846699191@qq.com' },
 ] as const
 
-/** ── 视频背景 ── */
+/** ── 视频背景 ──
+ * 优先使用随站点发布的自托管文件（不依赖第三方链接存活）；
+ * 若自托管文件缺失，浏览器会自动回落到 fallbackSrc 的原始外链。
+ * poster 是首帧海报：视频就绪前的占位图，也是小屏（不播放视频）时的静态背景。 */
 export const bgVideo = {
-  src: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4',
+  src: `${import.meta.env.BASE_URL}bg.mp4`,
+  fallbackSrc: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4',
+  poster: `${import.meta.env.BASE_URL}bg-poster.jpg`,
   type: 'video/mp4',
 }
 

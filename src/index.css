@@ -1,12 +1,35 @@
-/* ── Google Fonts ── */
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500&display=swap');
-
 @import "tailwindcss";
+
+/* ── 字体令牌（自托管字体，见 src/main.tsx）──
+ * Instrument Serif / Inter 只覆盖拉丁字符，中文由下面的系统字体兜底。
+ * 显式写出中文回退栈，保证 Windows / macOS / 手机上的衬线观感一致。 */
+@theme {
+  --font-display: 'Instrument Serif', 'Songti SC', 'STSong', 'SimSun', 'Noto Serif SC', serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Source Han Sans SC', sans-serif;
+}
+
+/* ── 颜色令牌 ──
+ * 把 :root 里的 HSL 变量注册成 Tailwind 颜色，下面这些类才会真正生成 CSS：
+ * text-foreground / text-muted-foreground / text-primary / border-border / bg-background ...
+ * 用 inline 让工具类直接引用 var()，从而跟随 .light 主题切换。
+ * ⚠️ 之前这些类全部是"死类"（源码里写了 31 次，产物 CSS 里 0 条规则），
+ *    导致次要文字没有变灰、设计层级被压平。新增颜色务必在这里登记。 */
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-muted: hsl(var(--muted));
+  --color-accent: hsl(var(--accent));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+}
 
 /* ── Dark theme (default) ── */
 :root {
-  --font-display: 'Instrument Serif', serif;
-  --font-body: 'Inter', sans-serif;
   --background: 201 100% 13%;
   --foreground: 0 0% 100%;
   --muted-foreground: 240 4% 66%;
@@ -247,8 +270,12 @@ body {
 
 .tree-leaf-item {
   opacity: 0;
-  transform: translateX(side === 'left' ? -20px : 20px);
+  transform: translateX(-20px);
   transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.tree-leaf-item.leaf-right {
+  transform: translateX(20px);
 }
 
 .tree-leaf-item.visible {
@@ -287,4 +314,48 @@ body {
 .tree-leaf:hover .leaf-dot {
   box-shadow: 0 0 0 3px hsl(var(--background)), 0 0 16px rgba(255,255,255,.6);
   transform: scale(1.3);
+}
+
+:root.light .tree-leaf:hover .leaf-dot {
+  box-shadow: 0 0 0 3px hsl(var(--background)), 0 0 16px rgba(0,0,0,.2);
+}
+
+/* ── 移动端菜单项（跟随主题的背景色）── */
+.nav-item-idle {
+  background: transparent;
+}
+
+.nav-item-idle:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:root.light .nav-item-idle:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.nav-item-active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:root.light .nav-item-active {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* ── 减少动效偏好：关掉装饰性动画 ── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-rise,
+  .animate-fade-rise-delay,
+  .animate-fade-rise-delay-2,
+  .quote-enter,
+  .quote-exit {
+    animation: none;
+  }
+
+  .timeline-item,
+  .tree-branch,
+  .tree-leaf-item {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
