@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+# 站点为纯前端 SPA，页面通过 hash 路由（#/about 等）切换；
+# 搜索引擎不单独收录 hash 片段，故 sitemap 只声明站点根地址。
+Sitemap: https://cheeeom.github.io/velorah-hero/sitemap.xml
