@@ -26,6 +26,23 @@ vMAJOR.MINOR.PATCH
 
 ## 版本历史
 
+### v1.6.0 — 文章内容管线 + 新获奖 `(2026-09-12)`
+
+- **状态**: 🟢 当前活跃版本
+
+**新增：**
+- ✨ **Markdown 文章管线**：`src/content/articles/*.md` 成为文章唯一内容源（frontmatter：`title / date / category / summary`，正文 markdown），成长树与详情页由内容自动生成——新增文章 = 新增一个 md 文件，无需改组件。分类顺序/图标在 `site.ts` 的 `categoryOrder` / `categoryIcons` 登记，未登记的新分类自动排到最后。
+- ✨ **文章详情页**：路由扩展为 `#/articles/<slug>`（slug = md 文件名），`marked` 渲染正文；每篇独立的 `document.title` 与 meta description，支持分享链接刷新直达、浏览器前进后退。
+- ✨ **新获奖**：2026 苍溪县优秀学科教师（关于页时间线、个人称号计数器 2→3、JSON-LD `award` 数组、`<noscript>` 兜底内容同步）。
+- ✨ `index.html` 增加 `<noscript>` 兜底：不执行 JS 的爬虫（百度等）至少可读到简历级文字内容。
+- ✨ 叶子节点补 `aria-expanded`；展开面板移出按钮外层（避免 button 嵌套 button），新增"阅读全文"入口。
+
+**依赖：** 新增 `marked`（markdown 渲染，零依赖；JS 209→266 kB，gzip 66→86 kB）。
+
+> ⚠️ 7 篇文章正文为 AI 起草初稿，署名发布前需站长本人审校改写。
+
+---
+
 ### v1.5.0 — SEO 与可发现性 `(2026-09-12)`
 
 - **状态**: 🟢 当前活跃版本

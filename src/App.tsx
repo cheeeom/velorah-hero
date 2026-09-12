@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { marked } from 'marked'
 import { cn } from '@/lib/utils'
 import {
   brand,
@@ -7,11 +8,13 @@ import {
   about,
   contact,
   articles,
+  articlesBySlug,
   articleTree,
   socialLinks,
   bgVideo,
   quotes,
   pageMeta,
+  type ArticleBranch,
   type PageId,
 } from '@/content/site'
 
@@ -78,35 +81,44 @@ function useScrollReveal<T extends HTMLElement>() {
 
 const PAGE_IDS: PageId[] = ['home', 'about', 'articles', 'contact']
 
-/** 解析 URL hash；非法值回落到首页 */
-function readHash(): PageId {
-  const raw = window.location.hash.replace(/^#\/?/, '')
-  return (PAGE_IDS as string[]).includes(raw) ? (raw as PageId) : 'home'
+interface Route {
+  page: PageId
+  article?: string
 }
 
-function useHashRoute(): [PageId, (id: PageId) => void] {
-  const [page, setPage] = useState<PageId>(readHash)
+/** 解析 URL hash；非法值回落到首页，文章详情形如 #/articles/<slug> */
+function readHash(): Route {
+  const raw = window.location.hash.replace(/^#\/?/, '')
+  const [head, sub] = raw.split('/')
+  if (head === 'articles' && sub) {
+    return articlesBySlug[sub] ? { page: 'articles', article: sub } : { page: 'articles' }
+  }
+  return { page: (PAGE_IDS as string[]).includes(head) ? (head as PageId) : 'home' }
+}
+
+function useHashRoute(): [PageId, string | undefined, (id: PageId, article?: string) => void] {
+  const [route, setRoute] = useState<Route>(readHash)
 
   // 支持浏览器前进 / 后退
   useEffect(() => {
     const onHashChange = () => {
-      setPage(readHash())
+      setRoute(readHash())
       window.scrollTo({ top: 0 })
     }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
 
-  const navigate = useCallback((id: PageId) => {
-    setPage(id) // 立即切换，不必等 hashchange 事件
-    const target = '#/' + id
+  const navigate = useCallback((id: PageId, article?: string) => {
+    setRoute({ page: id, article }) // 立即切换，不必等 hashchange 事件
+    const target = '#/' + id + (article ? '/' + article : '')
     if (window.location.hash !== target) {
       window.location.hash = target // 写入历史：可分享、可后退
     }
     window.scrollTo({ top: 0 }) // 切页回到顶部
   }, [])
 
-  return [page, navigate]
+  return [route.page, route.article, navigate]
 }
 
 /* ════════════════════════════════════════════════════
@@ -564,7 +576,7 @@ function AboutPage({ onNavigate }: { onNavigate: (id: PageId) => void }) {
         <div className="grid grid-cols-3 gap-6 mb-16 max-w-lg">
           <Counter target={20} suffix="+" label="指导学生获奖" />
           <Counter target={2} suffix="项" label="省级以上荣誉" />
-          <Counter target={2} suffix="项" label="个人称号" />
+          <Counter target={3} suffix="项" label="个人称号" />
         </div>
 
         {/* 时间线标题 */}
@@ -620,10 +632,11 @@ function ContactPage() {
  * Articles Page — 成长树
  * ════════════════════════════════════════════════════ */
 
-function LeafNode({ article, side, delay }: {
-  article: { title: string; date: string; summary: string }
+function LeafNode({ article, side, delay, onNavigate }: {
+  article: ArticleBranch['articles'][number]
   side: 'left' | 'right'
   delay: number
+  onNavigate: (id: PageId, article?: string) => void
 }) {
   const [expanded, setExpanded] = useState(false)
   const { ref, visible } = useScrollReveal<HTMLDivElement>()
@@ -644,32 +657,47 @@ function LeafNode({ article, side, delay }: {
         side === 'left' ? 'right-0 translate-x-1/2' : 'left-0 -translate-x-1/2'
       )} />
 
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className={cn(
-          'tree-leaf text-left cursor-pointer rounded-xl p-4 w-full max-w-xs',
-          side === 'left' ? 'text-right' : 'text-left'
-        )}
-      >
-        <div className={cn('flex items-center gap-2', side === 'left' ? 'justify-end' : 'justify-start')}>
-          <span className="text-xs text-muted-foreground">{article.date}</span>
-          <span className="text-xs text-foreground/40">·</span>
-          <span className="text-sm font-medium text-foreground">{article.title}</span>
-        </div>
+      <div className={cn('flex flex-col w-full max-w-xs', side === 'left' ? 'items-end' : 'items-start')}>
+        <button
+          onClick={() => setExpanded(!expanded)}
+          aria-expanded={expanded}
+          className={cn(
+            'tree-leaf text-left cursor-pointer rounded-xl p-4 w-full',
+            side === 'left' ? 'text-right' : 'text-left'
+          )}
+        >
+          <div className={cn('flex items-center gap-2', side === 'left' ? 'justify-end' : 'justify-start')}>
+            <span className="text-xs text-muted-foreground">{article.date}</span>
+            <span className="text-xs text-foreground/40">·</span>
+            <span className="text-sm font-medium text-foreground">{article.title}</span>
+          </div>
+          {expanded && (
+            <p className={cn('text-sm text-muted-foreground mt-2 leading-relaxed quote-enter',
+              side === 'left' ? 'text-right' : 'text-left')}>
+              {article.summary}
+            </p>
+          )}
+        </button>
+        {/* 展开面板放在按钮外层，避免 button 嵌套 button */}
         {expanded && (
-          <p className={cn('text-sm text-muted-foreground mt-2 leading-relaxed quote-enter',
-            side === 'left' ? 'text-right' : 'text-left')}>
-            {article.summary}
-          </p>
+          <div className={cn('quote-enter mt-2 px-4 w-full', side === 'left' ? 'text-right' : 'text-left')}>
+            <button
+              onClick={() => onNavigate('articles', article.slug)}
+              className="cursor-pointer bg-transparent border-0 p-0 text-sm font-medium text-foreground underline underline-offset-4 hover:opacity-80 transition-opacity"
+            >
+              {articles.readMore}
+            </button>
+          </div>
         )}
-      </button>
+      </div>
     </div>
   )
 }
 
-function TreeBranch({ branch, index }: {
-  branch: { category: string; icon: string; articles: { title: string; date: string; summary: string }[] }
+function TreeBranch({ branch, index, onNavigate }: {
+  branch: ArticleBranch
   index: number
+  onNavigate: (id: PageId, article?: string) => void
 }) {
   const { ref, visible } = useScrollReveal<HTMLDivElement>()
   const side = index % 2 === 0 ? 'left' : 'right'
@@ -707,7 +735,7 @@ function TreeBranch({ branch, index }: {
         side === 'left' ? 'right-[58%] items-end' : 'left-[58%] items-start'
       )}>
         {branch.articles.map((article, i) => (
-          <LeafNode key={i} article={article} side={side} delay={i * 100} />
+          <LeafNode key={article.slug} article={article} side={side} delay={i * 100} onNavigate={onNavigate} />
         ))}
       </div>
     </div>
@@ -738,7 +766,7 @@ function ArticlesPage({ onNavigate }: { onNavigate: (id: PageId) => void }) {
 
           <div className="space-y-20 pb-8">
             {articleTree.map((branch, i) => (
-              <TreeBranch key={i} branch={branch} index={i} />
+              <TreeBranch key={branch.category} branch={branch} index={i} onNavigate={onNavigate} />
             ))}
           </div>
         </div>
@@ -747,6 +775,47 @@ function ArticlesPage({ onNavigate }: { onNavigate: (id: PageId) => void }) {
           <button onClick={() => onNavigate('home')}
             className="animate-fade-rise-delay cursor-pointer liquid-glass rounded-full px-10 py-4 text-base text-foreground hover:scale-[1.03] transition-transform">
             {articles.backBtn}
+          </button>
+        </div>
+      </div>
+    </PageShell>
+  )
+}
+
+/* ════════════════════════════════════════════════════
+ * Article Page — 文章详情（#/articles/<slug>）
+ * 正文来自 src/content/articles/*.md，由 marked 渲染。
+ * 内容作者即站长本人（信任边界内），故不做 XSS 消毒。
+ * ════════════════════════════════════════════════════ */
+
+function ArticlePage({ slug, onNavigate }: { slug: string; onNavigate: (id: PageId) => void }) {
+  const article = articlesBySlug[slug]
+
+  return (
+    <PageShell>
+      <div className="animate-fade-rise w-full max-w-2xl mx-auto">
+        {article ? (
+          <article>
+            <p className="text-center text-xs text-muted-foreground mb-4">
+              {article.category} · {article.date}
+            </p>
+            <h1 className="font-display text-[clamp(1.8rem,4vw,2.8rem)] leading-[1.15] tracking-[-1px] mb-10 text-center">
+              {article.title}
+            </h1>
+            <div
+              className="article-content"
+              dangerouslySetInnerHTML={{ __html: marked.parse(article.body) }}
+            />
+          </article>
+        ) : (
+          <p className="text-center text-muted-foreground mt-20">{articles.notFound}</p>
+        )}
+
+        <div className="text-center mt-16">
+          <button
+            onClick={() => onNavigate('articles')}
+            className="cursor-pointer liquid-glass rounded-full px-10 py-4 text-base text-foreground hover:scale-[1.03] transition-transform">
+            {articles.backToList}
           </button>
         </div>
       </div>
@@ -766,19 +835,19 @@ const pages: Record<PageId, (props: { onNavigate: (id: PageId) => void }) => Rea
 }
 
 function App() {
-  const [page, navigate] = useHashRoute()
+  const [page, articleSlug, navigate] = useHashRoute()
   const [theme, toggleTheme] = useTheme()
   // 以 JSX 方式渲染当前页面（而非直接调用函数），保证组件边界与 hook 规则不被破坏
   const CurrentPage = pages[page]
 
-  // 每页独立的 SEO 标题与描述（便于单页分享与收录）
+  // 每页独立的 SEO 标题与描述；文章详情页用文章自己的标题与摘要
   useEffect(() => {
-    const meta = pageMeta[page]
-    document.title = meta.title
+    const a = page === 'articles' && articleSlug ? articlesBySlug[articleSlug] : undefined
+    document.title = a ? `${a.title} · 严其 Chee Eom` : pageMeta[page].title
     document
       .querySelector('meta[name="description"]')
-      ?.setAttribute('content', meta.description)
-  }, [page])
+      ?.setAttribute('content', a ? a.summary : pageMeta[page].description)
+  }, [page, articleSlug])
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -790,7 +859,11 @@ function App() {
         onToggleTheme={toggleTheme}
       />
       <main>
-        <CurrentPage onNavigate={navigate} />
+        {page === 'articles' && articleSlug ? (
+          <ArticlePage slug={articleSlug} onNavigate={navigate} />
+        ) : (
+          <CurrentPage onNavigate={navigate} />
+        )}
       </main>
     </div>
   )

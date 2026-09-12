@@ -359,3 +359,72 @@ body {
     transition: none;
   }
 }
+
+/* ── 文章详情页正文排版（markdown 渲染结果） ── */
+.article-content {
+  color: hsl(var(--foreground) / 0.9);
+  font-size: 1rem;
+  line-height: 1.9;
+}
+
+.article-content p {
+  margin-bottom: 1.25em;
+}
+
+.article-content h2,
+.article-content h3 {
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  margin: 2em 0 0.75em;
+}
+
+.article-content h2 {
+  font-size: 1.25rem;
+}
+
+.article-content h3 {
+  font-size: 1.1rem;
+  margin: 1.75em 0 0.6em;
+}
+
+.article-content blockquote {
+  margin: 1.5em 0;
+  padding: 0.25em 1.25em;
+  border-left: 3px solid hsl(var(--muted-foreground) / 0.5);
+  color: hsl(var(--muted-foreground));
+}
+
+.article-content ul,
+.article-content ol {
+  margin: 0 0 1.25em 1.5em;
+}
+
+.article-content li {
+  margin-bottom: 0.4em;
+  list-style: disc;
+}
+
+.article-content ol li {
+  list-style: decimal;
+}
+
+.article-content strong {
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+.article-content em {
+  color: hsl(var(--muted-foreground));
+}
+
+.article-content img {
+  max-width: 100%;
+  border-radius: 12px;
+  margin: 1.5em 0;
+}
+
+.article-content a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+

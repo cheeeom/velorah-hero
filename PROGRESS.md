@@ -1,14 +1,15 @@
 # PROGRESS.md — velorah-hero 进度
 
 > 下一个 AI / 下一次会话从这里的「开工清单」开始。
-> 基准：`v1.5.0`（SEO 批次，2026-09-12）。上一批 v1.4.0（工程修复）已推送。
+> 基准：`v1.6.0`（文章管线 + 新获奖，2026-09-12）。上一批 v1.5.0（SEO）已推送。
 
 ## 当前状态速览
-- 🟢 **本地已修复并提交（v1.5.0）**，`tsc` 零错误、oxlint 零警告、`npm run build` 通过
+- 🟢 **本地已修复并提交（v1.6.0）**，`tsc` 零错误、oxlint 零警告、`npm run build` 通过
 - 🟢 **已推送到 GitHub**：main、v1.1.0~v1.4.0 tag、自动部署工作流均已上云；v1.5.0 见本次会话记录
-- 🟢 4 页面可用：首页（视频背景+名言轮播）/ 关于（头像+时间线+计数器）/ 文章（成长树）/ 联系（手机上现在也能进了）
+- 🟢 4 页面可用：首页（视频背景+名言轮播）/ 关于（头像+时间线+计数器）/ 文章（成长树 + 详情页）/ 联系（手机上现在也能进了）
 - 🟢 外链依赖已清零（字体 + 视频均自托管，仅保留外链作为视频兜底）
 - 🟢 SEO 基线已建立：分享卡片、每页标题、JSON-LD、robots、sitemap
+- 🟢 文章管线已建立：`src/content/articles/*.md` 为唯一内容源，详情页 `#/articles/<slug>`；7 篇正文是 AI 初稿待站长审校
 - 🟢 浏览器自动化可用：agent-browser + Chrome 153 已装好（见「开工清单」第 9 条）
 
 > 审阅结论与修复记录见同目录 `AUDIT.md`；版本历史见 `VERSION.md`。
@@ -26,7 +27,7 @@
 - [ ] 死资源清理：`src/assets/hero.png`、`react.svg`、`vite.svg`、`public/icons.svg`
 
 ### P3（内容与品牌）
-- [ ] 文章正文页 + markdown 内容管线（当前 6 篇只有标题+摘要）
+- [x] ~~文章正文页 + markdown 内容管线~~（v1.6.0 已完成；**7 篇正文为 AI 初稿，需老板审校改写**）
 - [ ] 首屏补身份标签（3 秒自证：职业 / 地点 / 代表性成果）
 - [ ] 简历 / 教学成果 PDF 下载
 - [ ] 自定义域名（改 `vite.config.ts` 的 `base` 为 `/` + 添加 `CNAME`）
@@ -40,7 +41,7 @@
 
 ## 开工清单（给下一个 AI）
 1. 读 `AGENTS.md`（同目录）——5 分钟搞清楚结构，**不要**从零扫仓库；改之前读 `AUDIT.md`。
-2. 改文案 → 只动 `src/content/site.ts`；改样式/交互 → `App.tsx` + `index.css`。
+2. 改文案 → 只动 `src/content/site.ts`；写文章 → 在 `src/content/articles/` 新增/修改 md 文件；改样式/交互 → `App.tsx` + `index.css`。
 3. **新增颜色务必在 `index.css` 的 `@theme inline` 里登记**——Tailwind v4 对未注册类名静默忽略，曾导致 31 处颜色类全部失效（见 AUDIT P0-2）。
 4. **本地跑起来**（环境有坑，照抄这套）：
    - 别用托管 node（跑 npm 会报 `Exit handler never called!`），用系统 node `C:\Program Files\nodejs\node.exe`。
@@ -50,7 +51,7 @@
    - 本地看效果：`node node_modules\vite\bin\vite.js preview --port 4173 --host 127.0.0.1`（注意默认只绑 IPv6，加 `--host 127.0.0.1`）
 5. 完工后：`npm run lint` + `npm run build` 双绿 → 按变更类型打 tag 并更新 `VERSION.md` 与 `package.json`。
 6. 部署：推送到 `main` 即由 GitHub Actions 自动发布；手动兜底 `npx gh-pages -d dist`。
-7. push 走代理 `http://192.168.8.70:9890`（仓库 config 已配好；`.52` 那个是死的）。
+7. push：`.70` 代理（2026-09-12 实测已失效）与 `.52` 代理都是死的；当前网络可直连 GitHub，直接 push 即可（若直连被重置，检查全局 `.gitconfig` 的 `http.proxy`，可在本仓库用 `git config http.proxy ""` 覆盖）。
 8. 构建产物基线（v1.4.0）：JS 209.33 kB（gzip 66.41）、CSS 25.45 kB（gzip 5.96）、全站 1601.6 KB（含视频 0.97 MB + 海报 144 KB + 字体 191 KB）。
 9. **要截图 / 浏览器验证时**：agent-browser + Chrome 153 已装好，浏览器在 `D:\a\2026-09-11-22-07-08\chrome153\chrome-win64\chrome.exe`。用法（**必须先把系统 node 顶到 PATH 最前**，否则 daemon 静默崩溃）：
    ```powershell

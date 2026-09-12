@@ -54,6 +54,7 @@ export const about = {
   title: '关于我',
   intro: '一名扎根一线的教育实践者。\n相信教育不是灌满一桶水，而是点燃一团火。',
   achievements: [
+    { year: '2026', text: '苍溪县优秀学科教师', icon: '🏅' },
     { year: '2025', text: '广元市教师能力大赛一等奖', icon: '🏆' },
     { year: '2023/2026', text: '指导学生分获四川省职业技能大赛二等奖、三等奖', icon: '🎯' },
     { year: '累计', text: '指导学生获市级、县级奖励 20 余次', icon: '📊' },
@@ -70,12 +71,55 @@ export const contact = {
   hint: '点击邮箱可直接发送',
 }
 
-/** ── 文章页 ─ */
+/** ── 文章页 ──
+ * 内容源是本目录下 articles/*.md：frontmatter 写 title / date / category / summary，
+ * 正文为 markdown。新增文章 = 新增一个 md 文件，列表与详情页自动生成，不用改组件。
+ * ponytail: frontmatter 解析只支持「key: value」单行格式（不支持嵌套/多行值），
+ * 现有内容够用；将来需要 YAML 高级语法时再换 gray-matter。 */
 export interface ArticleItem {
+  slug: string
   title: string
   date: string
+  category: string
   summary: string
+  body: string
 }
+
+function parseFrontmatter(raw: string): { meta: Record<string, string>; body: string } {
+  const m = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/)
+  if (!m) return { meta: {}, body: raw.trim() }
+  const meta: Record<string, string> = {}
+  for (const line of m[1].split(/\r?\n/)) {
+    const i = line.indexOf(':')
+    if (i > 0) meta[line.slice(0, i).trim()] = line.slice(i + 1).trim()
+  }
+  return { meta, body: m[2].trim() }
+}
+
+const mdFiles = import.meta.glob('./articles/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>
+
+export const articleList: ArticleItem[] = Object.entries(mdFiles)
+  .map(([path, raw]) => {
+    const slug = path.split('/').pop()!.replace(/\.md$/, '')
+    const { meta, body } = parseFrontmatter(raw)
+    return {
+      slug,
+      title: meta.title ?? slug,
+      date: meta.date ?? '',
+      category: meta.category ?? '随笔',
+      summary: meta.summary ?? '',
+      body,
+    }
+  })
+  .sort((a, b) => b.date.localeCompare(a.date)) // 新文章在前
+
+export const articlesBySlug: Record<string, ArticleItem> = Object.fromEntries(
+  articleList.map((a) => [a.slug, a]),
+)
 
 export interface ArticleBranch {
   category: string
@@ -83,45 +127,34 @@ export interface ArticleBranch {
   articles: ArticleItem[]
 }
 
-export const articleTree: ArticleBranch[] = [
-  {
-    category: '教育随笔',
-    icon: '✍️',
-    articles: [
-      { title: '被标准答案驯化的土地上', date: '2026-07', summary: '当教育只剩下一种正确答案，我们失去了什么？' },
-      { title: '课堂里的沉默者', date: '2026-05', summary: '那些从不举手的学生，往往想得最多。' },
-    ],
-  },
-  {
-    category: '教学实践',
-    icon: '🌱',
-    articles: [
-      { title: '指导学生参赛的三个关键', date: '2026-03', summary: '从市级到省级，一路走来总结的方法论。' },
-      { title: '项目式教学初探', date: '2025-12', summary: '把课堂还给学生，把学习还给生活。' },
-    ],
-  },
-  {
-    category: '读书笔记',
-    icon: '📖',
-    articles: [
-      { title: '读《教育的使命》', date: '2026-06', summary: '雅斯贝尔斯的启示：教育是唤醒，不是塑造。' },
-    ],
-  },
-  {
-    category: '成长反思',
-    icon: '🌿',
-    articles: [
-      { title: '从教坛新秀到优秀指导教师', date: '2026-01', summary: '三年成长路，不是头衔的叠加，而是视角的转变。' },
-      { title: '比赛之外的教育的意义', date: '2025-09', summary: '获奖不是终点，让学生学会思考才是。' },
-    ],
-  },
-]
+/** 成长树上的分类顺序与图标；未列出的新分类自动排在最后、默认叶子图标 */
+const categoryOrder = ['教育随笔', '教学实践', '读书笔记', '成长反思']
+const categoryIcons: Record<string, string> = {
+  教育随笔: '✍️',
+  教学实践: '🌱',
+  读书笔记: '📖',
+  成长反思: '🌿',
+}
+
+export const articleTree: ArticleBranch[] = [...new Set(articleList.map((a) => a.category))]
+  .sort((a, b) => {
+    const ia = categoryOrder.indexOf(a)
+    const ib = categoryOrder.indexOf(b)
+    return (ia === -1 ? Infinity : ia) - (ib === -1 ? Infinity : ib)
+  })
+  .map((category) => ({
+    category,
+    icon: categoryIcons[category] ?? '🌿',
+    articles: articleList.filter((a) => a.category === category),
+  }))
 
 export const articles = {
   title: '文章',
   leafHint: '每一篇文章，都是一片生长的叶子 🌱',
-  placeholder: '内容待补充，敬请期待……',
+  readMore: '阅读全文 →',
+  notFound: '这片叶子还在生长中……',
   backBtn: '回到首页',
+  backToList: '回到文章',
 }
 
 /** ── 每页 SEO 元信息 ──
@@ -136,7 +169,7 @@ export const pageMeta: Record<PageId, { title: string; description: string }> = 
   about: {
     title: '关于我 · 严其 Chee Eom',
     description:
-      '严其（Chee Eom），四川广元中职教师。广元市教师能力大赛一等奖，指导学生获四川省职业技能大赛二等奖、三等奖。',
+      '严其（Chee Eom），四川广元中职教师。2026 苍溪县优秀学科教师，广元市教师能力大赛一等奖，指导学生获四川省职业技能大赛二等奖、三等奖。',
   },
   articles: {
     title: '文章 · 严其 Chee Eom',
