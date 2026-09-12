@@ -26,10 +26,26 @@ vMAJOR.MINOR.PATCH
 
 ## 版本历史
 
+### v1.5.0 — SEO 与可发现性 `(2026-09-12)`
+
+- **状态**: 🟢 当前活跃版本
+
+**新增：**
+- ✨ **Open Graph / Twitter 分享卡片**：微信 / QQ / 微博 / 飞书 转发不再是白卡片。
+- ✨ **品牌分享图** `public/og.jpg`（1200×630，深青底 + CE 徽标 + 衬线标题 + 一句理念 + "中职教师 · 四川广元"）。
+- ✨ **每页独立 `document.title` 与 `meta description`**：首页 / 关于 / 文章 / 联系 各不相同，便于单页分享与收录。
+- ✨ **JSON-LD `Person` 结构化数据**：声明姓名（严其 / Chee Eom）、职业（中职教师）、地区（四川广元）、邮箱与领域。
+- ✨ `robots.txt` + `sitemap.xml`；`meta theme-color`（亮/暗两套）、`canonical`、`author`、`keywords`。
+
+**说明：**
+- 英文名 `Chee Eom` 经确认是**刻意的品牌网名**（并非"严其"的拼音），故全站按品牌名对待，并在结构化数据里以 `alternateName` 声明，兼顾拼音检索。
+- ⚠️ `canonical` / `og:url` / `og:image` 是绝对地址，**绑定自定义域名后需同步更新**（`index.html`）。
+
+---
+
 ### v1.4.0 — 工程修复批次 `(2026-09-11)`
 
 - **Tag**: `v1.4.0`
-- **状态**: 🟢 当前活跃版本
 
 **修复：**
 - 🐛 **移动端导航失效**：汉堡按钮原本没有点击事件，且导航链接/CTA 在手机上全部隐藏 → 手机访客无法进入"联系"页。现已补全抽屉菜单。
@@ -110,6 +126,6 @@ npx gh-pages -d dist
 - [ ] 简历 / 教学成果 PDF 下载入口
 - [ ] 自定义域名（改 `vite.config.ts` 的 `base` 为 `/` 并添加 `CNAME`）
 - [ ] 访问统计（隐私友好型，如 Umami / Cloudflare Web Analytics）
-- [ ] SEO：meta description、Open Graph 分享卡片、JSON-LD
+- [x] ~~SEO：meta description、Open Graph 分享卡片、JSON-LD~~（v1.5.0 已完成）
 - [ ] 头像压缩（当前 46.5 kB 却只显示 96px）
 - [ ] 死资源清理：`src/assets/hero.png`、`react.svg`、`vite.svg`、`public/icons.svg`

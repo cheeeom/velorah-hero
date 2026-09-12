@@ -20,7 +20,8 @@
 | P1-6 | 版本管理断档 | ✅ 已修（补齐 v1.1.0~v1.4.0 共 6 个 tag + VERSION.md + package.json） |
 | P2-1 | CSS 里的 JS 语法 bug | ✅ 已修 |
 | P2-4 | 字体内联、文案硬编码、`pages[page]()` 直调、定时器泄漏、avatar 硬编码 base | ✅ 已修（其余项见下） |
-| P2-2 / P2-3 / P2-5 / P3 | SEO、无障碍、性能、内容与品牌 | ⏳ 未处理，见对应章节 |
+| P2-2 | SEO / 可发现性（meta description / OG / JSON-LD / 每页标题 / robots / sitemap） | ✅ 已修（v1.5.0） |
+| P2-3 / P2-5 / P3 | 无障碍、性能、内容与品牌 | ⏳ 未处理，见对应章节 |
 
 **修复后的构建实测**：`tsc` 零错误 · oxlint 0 warning / 0 error · 产物 JS 209.33 kB（gzip 66.41）、CSS 25.45 kB（gzip 5.96）、全站 1601.6 KB（含自托管视频 0.97 MB + 海报 144 KB）。
 **首页传输量对比：视频从 13.49 MB 降到 0.97 MB（-92.8%），且移动端完全不加载视频（改为 144 KB 海报）。**
@@ -95,12 +96,22 @@ transform: translateX(side === 'left' ? -20px : 20px);   /* ← JS 写进 CSS �
 ```
 `side` 是 JS 变量，浏览器解析失败 → **整条声明被丢弃**，叶子节点只有淡入没有横向滑入。已改为 `.tree-leaf-item.leaf-right` 类（`App.tsx` 同步加 `leaf-right`）。影响仅观感，但确实是个"复制粘贴事故"的化石。
 
-### P2-2 SEO / 可发现性几乎零投入
+### P2-2 SEO / 可发现性几乎零投入（✅ v1.5.0 已修）
 - `index.html` 无 `meta description`、无 Open Graph / Twitter 卡片 → **微信、微博、QQ 分享出去是一张白卡片**（对教师个人品牌是白白浪费）
 - `<html lang="en">`，内容全中文（对搜素引擎和屏幕阅读器都是错误信号）
 - 无 `sitemap.xml` / `robots.txt`；无 JSON-LD `Person` 结构化数据（填了姓名/职业/地区，Google 上搜"严其 广元 教师"才有机会）
 - 每页无独立 `document.title`
 - **纯 CSR**：百度基本不执行 JS，收录趋近于 0。要么接受（国内流量靠微信转发），要么上预渲染（个人站推荐 `vite-plugin-prerender` 或干脆用 Astro 重写）
+
+**✅ v1.5.0 修复结果**：
+- `index.html` 补齐 `meta description` / `keywords` / `author` / `robots` / `canonical` / `theme-color`（亮暗两套）。
+- 补齐 **Open Graph + Twitter 卡片**，并生成品牌分享图 `public/og.jpg`（1200×630）—— 分享出去不再是白卡片。
+- 新增 **JSON-LD `Person`**（姓名 / 别名 / 职业 / 地区 / 邮箱 / 领域）。
+- 每页独立 `document.title` 与 `meta description`（`site.ts` 的 `pageMeta` + `App.tsx` 一个 effect）。
+- 新增 `public/robots.txt` 与 `public/sitemap.xml`。
+- `lang="zh-CN"` 已在 v1.4.0 修好。
+- **英文名已确认**：`Chee Eom` 是刻意的品牌网名，非拼音笔误 → 全站按品牌名处理，结构化数据用 `alternateName` 兼顾。
+- ⏳ 仍未解决（属 P3）：纯 CSR 导致百度收录弱 → 待评估预渲染 / SSG。
 
 ### P2-3 无障碍
 全站无 `prefers-reduced-motion` 处理（动效 + 自动播放视频对前庭敏感用户不友好）；缺 `<main>`/`<header>` 语义；背景视频缺 `aria-hidden="true"`；汉堡/叶子展开按钮缺 `aria-expanded`；`<em className="not-italic">` 用语义标签做配色 hack（HeroHeading L196）。
@@ -136,7 +147,7 @@ LCP 元素是背景视频与字体（都是外部资源）；`backdrop-filter: b
 5. **加访问统计**：Umami / Cloudflare Web Analytics（无 cookie、隐私友好）。不知道谁来看，就没法迭代。
 6. **邮箱明文暴露**被爬虫抓取（`846699191@qq.com` 公开在源码与页面上），QQ 邮箱风险可控，介意的话做轻量混淆。
 7. **社交链接是 `'#'` 占位**（`site.ts` L126），GitHub 没填；也缺微信/公众号入口——国内访客的主要触达渠道。
-8. **待你确认**：英文名 `Chee Eom` 与"严其"（Yan Qi）不是拼音关系。若是有意为之的品牌网名，建议在关于页点一句来源，避免访客困惑；若是笔误，就该统一（毕竟搜索引擎认拼音）。
+8. ~~**待你确认**：英文名 `Chee Eom` 与"严其"（Yan Qi）不是拼音关系。~~ **已确认（2026-09-12）：`Chee Eom` 是刻意的品牌网名。** 全站按品牌名处理，结构化数据用 `alternateName` 兼顾拼音检索。**剩余建议**：在关于页补一句名字来历，避免访客困惑（需你提供说法）。
 
 ---
 

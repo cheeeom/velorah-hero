@@ -11,6 +11,7 @@ import {
   socialLinks,
   bgVideo,
   quotes,
+  pageMeta,
   type PageId,
 } from '@/content/site'
 
@@ -769,6 +770,15 @@ function App() {
   const [theme, toggleTheme] = useTheme()
   // 以 JSX 方式渲染当前页面（而非直接调用函数），保证组件边界与 hook 规则不被破坏
   const CurrentPage = pages[page]
+
+  // 每页独立的 SEO 标题与描述（便于单页分享与收录）
+  useEffect(() => {
+    const meta = pageMeta[page]
+    document.title = meta.title
+    document
+      .querySelector('meta[name="description"]')
+      ?.setAttribute('content', meta.description)
+  }, [page])
 
   return (
     <div className="relative min-h-screen overflow-hidden">

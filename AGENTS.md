@@ -60,7 +60,9 @@ Liquid Glass 毛玻璃暗色主题，部署在 GitHub Pages。
 4. 注意：`npm run build` 依赖 `base: '/velorah-hero/'`，若将来绑自定义域名要同步改成 `/`
 
 ## 已知问题（v1.4.0 后仍存在的）
-- **P2｜SEO 基本裸奔**：无 `meta description`、无 OG 分享卡片（微信/微博分享是空白卡）、无 JSON-LD、无 sitemap/robots、每页无独立 title；纯 CSR，百度基本抓不到
+- **P2｜SEO 已补基础（v1.5.0）**：`meta description` / OG+Twitter 卡片 / 品牌分享图 `public/og.jpg` / JSON-LD `Person` / `robots.txt` / `sitemap.xml` / 每页独立 `title` 均已就位。**剩余**：纯 CSR → 百度收录仍弱（待评估预渲染 / SSG）。
+  ⚠️ `canonical`、`og:url`、`og:image` 是绝对地址，绑定自定义域名后需同步改 `index.html`。
+  ℹ️ 品牌名：`严其`（中文名）+ `Chee Eom`（**刻意的英文品牌网名**，非拼音）；SEO 元信息两者都要覆盖，结构化数据用 `alternateName` 兼顾。
 - **P2｜性能**：`public/avatar.jpg` 46.5 kB 却只显示 96×96（应压成 WebP）；`backdrop-filter` 无 `@supports` 降级；`public/icons.svg` 5 kB 无引用却照样发布
 - **P2｜无障碍**：`HeroHeading` 用 `<em className="not-italic">` 做配色 hack；叶子展开按钮缺 `aria-expanded`
 - **P2｜死资源**：`src/assets/hero.png`、`react.svg`、`vite.svg` 无引用（不进产物，只脏仓库）

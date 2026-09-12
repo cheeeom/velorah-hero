@@ -124,6 +124,30 @@ export const articles = {
   backBtn: '回到首页',
 }
 
+/** ── 每页 SEO 元信息 ──
+ * 供 App 在切换 hash 路由时更新 document.title / meta description，
+ * 让每个页面都能被单独分享、且标题各不相同。 */
+export const pageMeta: Record<PageId, { title: string; description: string }> = {
+  home: {
+    title: '严其 · Chee Eom ｜ 教育不是灌满一桶水，而是点燃一团火',
+    description:
+      '严其（Chee Eom）的个人网站 —— 扎根四川广元一线的中职教育者，记录教育随笔、教学实践与成长反思。',
+  },
+  about: {
+    title: '关于我 · 严其 Chee Eom',
+    description:
+      '严其（Chee Eom），四川广元中职教师。广元市教师能力大赛一等奖，指导学生获四川省职业技能大赛二等奖、三等奖。',
+  },
+  articles: {
+    title: '文章 · 严其 Chee Eom',
+    description: '教育随笔、教学实践、读书笔记与成长反思 —— 严其的文字集。',
+  },
+  contact: {
+    title: '联系我 · 严其 Chee Eom',
+    description: '欢迎交流教育、教学与合作。可通过邮箱联系严其（Chee Eom）。',
+  },
+}
+
 /** ── 社交链接 ── */
 export const socialLinks = [
   { label: 'GitHub', href: '#' },
